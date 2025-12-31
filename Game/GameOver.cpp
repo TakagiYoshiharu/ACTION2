@@ -10,7 +10,23 @@ GameOver::~GameOver(){
 
 }
 
-bool GameOver::Start() {
+void GameOver::Update(){
+    float deltaTime = g_gameTime->GetFrameDeltaTime();
+
+    if (!m_canInput) {
+        m_inputWaitTimer -= deltaTime;
+        if (m_inputWaitTimer <= 0.0f) {
+            m_canInput = true;
+        }
+        return; // 入力を受け付けない
+    }
+
+    if (g_pad[0]->IsTrigger(enButtonA)) {
+        Game::GetInstance()->RestartStage();
+        DeleteGO(this);
+    }
+}
+bool GameOver::Start(){
     // BGMを止める
     if (Game::GetInstance() && Game::GetInstance()->GetBGM()) {
         Game::GetInstance()->GetBGM()->Stop();
@@ -34,32 +50,12 @@ bool GameOver::Start() {
 
     return true;
 }
-
-
-void GameOver::Update() {
-    float deltaTime = g_gameTime->GetFrameDeltaTime();
-
-    if (!m_canInput) {
-        m_inputWaitTimer -= deltaTime;
-        if (m_inputWaitTimer <= 0.0f) {
-            m_canInput = true;
-        }
-        return; // 入力を受け付けない
-    }
-
-    if (g_pad[0]->IsTrigger(enButtonA)) {
-        Game::GetInstance()->RestartStage();
-        DeleteGO(this);
-    }
-}
-
-
 void GameOver::Render(RenderContext& rc){
 	m_spriteRender.Draw(rc);
     if (m_canInput) {
         wchar_t buf[64]; swprintf(buf, 64, L"Aボタンでスタート");
         m_font.SetText(buf);
-        m_font.SetPosition({ -150.0f, -250.0f, 0.0f }); 
+        m_font.SetPosition({ -150.0f, -250.0f, 0.0f });
         m_font.SetColor({ 0.0f, 0.0f, 0.0f, 1.0f });
         m_font.Draw(rc);
     }

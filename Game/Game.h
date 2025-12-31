@@ -58,5 +58,4 @@ public:
     SoundSource* m_bgm = nullptr; // Œ»İÄ¶’†‚ÌBGM
     SoundSource* GetBGM() const { return m_bgm; }
     void SetBGM(SoundSource* bgm) { m_bgm = bgm; }
-
 };

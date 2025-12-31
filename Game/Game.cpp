@@ -57,7 +57,7 @@ void Game::SetupStage1() {
 	noko3->SetStartDirection(Vector3::Front); // Å©ç∂Ç÷
 	m_enemy2s.push_back(noko3);
 
-	Enemy2*enemy1 = NewGO<Enemy2>(0, "enemy2");
+	Enemy2* enemy1 = NewGO<Enemy2>(0, "enemy2");
 	enemy1->SetStartPosition({400.0f,2.0f,110.0f});
 	m_enemy2s.push_back(enemy1);
 

@@ -15,8 +15,7 @@ Enemy2::Enemy2()
     m_modelRender.Init("Assets/modelData/nokonoko1.tkm");
     m_shellModelRender.Init("Assets/modelData/nokonoko3.tkm"); // çbóÖÉÇÉfÉãÇÃÉpÉX
     g_soundEngine->ResistWaveFileBank(3, "Assets/sound/AS_1473759_ÉQÅ[ÉÄ_ÉåÉgÉçÇ»SE_Åiì•ÇﬁÅj.wav");     // É|ÉàÉì
-    g_soundEngine->ResistWaveFileBank(7, "Assets/sound/AS_1387216_Åyä¬ã´âπÅzínñ Ç…ì]Ç™ÇÈãÛÇ´ä .wav");     // ÉLÉbÉN
-
+    g_soundEngine->ResistWaveFileBank(7, "Assets/sound/AS_1387216_Åyä¬ã´âπÅzínñ Ç…ì]Ç™ÇÈãÛÇ´ä .wav");
 }
 
 Enemy2::~Enemy2() {
@@ -109,7 +108,6 @@ void Enemy2::Update() {
         }
     }
 
-
     //çbóÖïúäàéûä‘
     if (m_state == EnemyState::ShellStill) {
         if (m_shellStillTimer > 0.0f) {
@@ -183,8 +181,6 @@ void Enemy2::Update() {
     m_modelRender.Update();
     m_shellModelRender.Update();
     bool ghost = (m_state == EnemyState::ShellMoving);
-   // SetPlayerGhost(ghost);
-
 }
 
 
@@ -196,9 +192,10 @@ void Enemy2::OnStepped(const Vector3& playerForward) {
         m_state = EnemyState::ShellStill;
         m_velocity = Vector3::Zero;
         m_shellStillTimer = 10.0f;
-       { SoundSource* se = NewGO<SoundSource>(0); se->Init(3);
-       se->SetVolume(3.0f);
-       se->Play(false); 
+        {
+            SoundSource* se = NewGO<SoundSource>(0); se->Init(3);
+            se->SetVolume(3.0f);
+            se->Play(false);
         }
         break;
     case EnemyState::ShellStill: {
@@ -234,22 +231,18 @@ void Enemy2::OnStepped(const Vector3& playerForward) {
         // ìÆÇ¢ÇƒÇ¢ÇÈçbóÖÇì•Çﬁ Å® í‚é~ Å{ ÉvÉåÉCÉÑÅ[ÇíµÇÀÇ≥ÇπÇÈ
         m_state = EnemyState::ShellStill;
         m_velocity = Vector3::Zero;
-       // SetPlayerGhost(false);
         // ÅöÇ±Ç±Çí«â¡
-      
-
         {
-            SoundSource* se = NewGO<SoundSource>(0);  
+            SoundSource* se = NewGO<SoundSource>(0);
             se->Init(3);
             se->SetVolume(3.0f);
-            se->Play(false); 
+            se->Play(false);
         }
 
         // ÅöÇ±Ç±Ç≈ÉvÉåÉCÉÑÅ[ÇíµÇÀÇ≥ÇπÇÈ
         Game::GetInstance()->GetPlayer()->ApplyStepJump();
         m_stepCooldown = 0.2f;
         m_shellStillTimer = 10.0f;
-
         break;
     default:
         break;
@@ -289,13 +282,11 @@ void Enemy2::OnCollision(const CollisionResult& result) {
         if (m_characterController.GetRigidBody()->GetBody() != nullptr) {
             m_characterController.GetRigidBody()->Release();
         }
-      
         Vector3 moveDir = result.playerForward;
         moveDir.y = 0.0f;
         moveDir.Normalize();
         m_velocity = moveDir * m_shellSpeed;
         m_invincibleTimer = 0.2f;
-       // SetPlayerGhost(true);
         PhysicsGhostObject::CollisionFilter filter{ enCollisionGroup_Sensor,enCollisionGroup_Player };
     }
 }
