@@ -4,6 +4,8 @@
 #include"Player.h"
 #include"Game.h"
 #include"Enemy2.h"
+#include"sound/SoundEngine.h"
+#include"sound/soundSource.h"
  //Bullet → K2Engine Vector3 変換関数
 //inline nsK2EngineLow::Vector3 ToVector3(const btVector3& v) {
 //    return nsK2EngineLow::Vector3(v.getX(), v.getY(), v.getZ());
@@ -12,7 +14,7 @@
 Enemy::Enemy()
 {
   m_modelRender.Init("Assets/modelData/enemyDX.tkm");
-
+  g_soundEngine->ResistWaveFileBank(3, "Assets/sound/AS_172810_プヨ（ジャンプ・跳ねる・攻撃・スライム）.wav");
 }
 
 Enemy::~Enemy() {
@@ -44,6 +46,8 @@ void Enemy::Move() {
 
 
 void Enemy::Update() {
+
+    
     if (m_isDead) {
         if (m_deathTimer > 0.0f) {
             m_deathTimer -= g_gameTime->GetFrameDeltaTime();
@@ -234,6 +238,17 @@ void Enemy::OnStepped() {
     if (m_isDead) return;
     m_isDead = true;
     m_deathTimer = 0.0f;
+
+    SoundSource* se = NewGO<SoundSource>(0);
+    se->Init(3);
+
+    if (se->GetXAudio2SourceVoice() != nullptr) {
+        se->SetVolume(3.5f);
+        se->Play(false);
+    }
+    else {
+        printf("効果音の初期化に失敗しました（ID:3）\n");
+    }
 }
 
 void Enemy::SetStartPosition(const Vector3& pos) {

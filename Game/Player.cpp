@@ -5,6 +5,9 @@
 #include"Game.h"
 #include"GameOver.h"
 #include"CollisonGroup.h"
+#include"sound/SoundEngine.h"
+#include"sound/soundSource.h"
+
 
 Player::Player()
 {
@@ -36,6 +39,9 @@ Player::Player()
         }
       
     }
+
+    g_soundEngine->ResistWaveFileBank(4, "Assets/sound/AS_135672_ピヨヨヨン（マシーン、脱力）.wav"); // ←ファイル名は実際のものに合わせてね！
+
 }
 
 Player::~Player()
@@ -46,12 +52,10 @@ Player::~Player()
 void Player::Update()
 {
     if (m_isDead) {
-        m_deathTimer -= g_gameTime->GetFrameDeltaTime();
-        if (m_deathTimer <= 0.0f) {
-            Game::GetInstance()->ChangeScene("GameOver");
-            DeleteGO(this);
-            return;
-        }
+        if (auto* game = Game::GetInstance()) {
+            game->ChangeScene("GameOver");
+     }
+        DeleteGO(this);
         return;
     }
 
@@ -79,7 +83,10 @@ void Player::Update()
     //落下判定
     if (m_position.y < -1000.0f) {
         m_isDead = true;
-        Game::GetInstance()->ChangeScene("GameOver");
+        m_prevPosition = m_position;
+        if (auto*game=Game::GetInstance()) {
+            game->ChangeScene("GameOver");
+       }
         DeleteGO(this);
         return;
     }
@@ -247,26 +254,18 @@ void Player::CheckStepOnEnemy()
             float horizontalDist = sqrtf(dx * dx + dz * dz);
 
             if (horizontalDist < 52.0f && dy < 10.0f) {
-                if (enemy2->GetState() == Enemy2::EnemyState::ShellMoving) {
-                    // ★甲羅移動中はダメージ
-                    OnDamaged();
-                }
-                else if (enemy2->GetState() == Enemy2::EnemyState::Walking) {
-                    // ★亀状態もダメージ
-                    OnDamaged();
-                }
-                else if (enemy2->GetState() == Enemy2::EnemyState::ShellStill) {
-                    // ★甲羅停止中はダメージなし → 蹴って ShellMoving に
+                auto state = enemy2->GetState();
+                if (state == Enemy2::EnemyState::ShellStill) {
                     Enemy2::CollisionResult result;
                     result.hitPlayer = true;
                     Vector3 forwardDir = GetForwardFromQuaternion(m_rotation);
                     forwardDir.y = 0.0f;
                     forwardDir.Normalize();
                     result.playerForward = forwardDir;
-                    enemy2->OnCollision(result);
-                }
+                    enemy2->OnCollision(result); }
+                else if (state == Enemy2::EnemyState::ShellMoving || state == Enemy2::EnemyState::Walking) {
+                    OnDamaged(); }
             }
-
         }
     }
 }
@@ -318,23 +317,32 @@ void Player::PlayAnimation()
 }
 
 void Player::OnDamaged() {
-    if (m_isInvincible || m_hp <= 0||m_isDead) return;
+    if (m_isInvincible || m_hp <= 0 || m_isDead) return;
 
     m_hp--;
     printf("ダメージを受けた！ 残りHP: %d\n", m_hp);
 
     m_isInvincible = true;
-    m_invincibleTimer = 2.0f; // 1秒間無敵
-    Game::GetInstance()->StartHitStop(0.2f);//ヒットストップ
+    m_invincibleTimer = 2.0f;
+    Game::GetInstance()->StartHitStop(0.2f);
+
+    // 効果音再生
+    SoundSource* se = NewGO<SoundSource>(0);
+    se->Init(4);
+    if (se->GetXAudio2SourceVoice() != nullptr) {
+        se->SetVolume(3.0f);
+        se->Play(false);
+    }
+
 
     if (m_hp <= 0) {
         m_isDead = true;
         m_deathTimer = 1.0f;
         m_moveSpeed = Vector3::Zero;
-            m_moveSpeed.y = 0.0f;
-            m_moveSpeed.y -= 100.0f;
+        m_moveSpeed.y -= 100.0f;
     }
 }
+
 
 Vector3 Player::GetPosition() const {
     return m_position;

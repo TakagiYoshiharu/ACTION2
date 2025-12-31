@@ -55,5 +55,8 @@ public:
     float m_timeLimit = 120.0f;
     FontRender m_timeFont;
     bool m_isCleared = false; // ƒNƒŠƒAÏ‚İ‚©‚Ç‚¤‚©
+    SoundSource* m_bgm = nullptr; // Œ»İÄ¶’†‚ÌBGM
+    SoundSource* GetBGM() const { return m_bgm; }
+    void SetBGM(SoundSource* bgm) { m_bgm = bgm; }
 
 };

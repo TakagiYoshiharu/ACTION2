@@ -5,6 +5,8 @@
 
 BOSS::BOSS() {
 	m_modelRender.Init("Assets/modelData/BOSS.tkm");
+    // ボスBGMを再生
+    g_soundEngine->ResistWaveFileBank(15, "Assets/sound/BOSS_BGM.wav");
 }
 
 BOSS::~BOSS() {
@@ -105,6 +107,38 @@ void BOSS::Update() {
     if (dist < 250.0f) {
         Move(deltaTime, playerPos, newPos);
     }
+    if (!m_isVisible && dist < appearRange) {
+        m_isVisible = true;
+
+        // 既存のBGMを止める
+        if (Game::GetInstance()->GetBGM() != nullptr) {
+            Game::GetInstance()->GetBGM()->Stop();
+            DeleteGO(Game::GetInstance()->GetBGM());
+            Game::GetInstance()->SetBGM(nullptr);
+        }
+
+        m_bgm = NewGO<nsK2EngineLow::SoundSource>(0);
+        m_bgm->Init(15);
+
+        if (m_bgm->GetXAudio2SourceVoice() != nullptr) {
+            m_bgm->SetVolume(2.0f);
+            m_bgm->Play(true);
+        }
+        else {
+            printf("ボスBGMの初期化に失敗しました！\n");
+            DeleteGO(m_bgm);
+            m_bgm = nullptr;
+        }
+    }
+}
+
+void BOSS::OnDefeated() {
+    if (m_bgm) {
+        m_bgm->Stop();
+        DeleteGO(m_bgm);
+        m_bgm = nullptr;
+    }
+    DeleteGO(this);
 }
 
 

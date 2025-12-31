@@ -1,4 +1,5 @@
 #pragma once
+class Game;
 class Player :public IGameObject
 {
 public:
@@ -60,5 +61,6 @@ public:
     bool IsDead()const { return m_isDead; }
     int GetHP()const { return m_hp; }
     int starCount = 0;
+    Game* m_game;
 };
 

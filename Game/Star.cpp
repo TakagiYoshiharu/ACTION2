@@ -36,6 +36,10 @@ void Star::Update()
     //ŠG•`‚«‚³‚ñ‚ÌXVˆ—B
 
     modelRender.Update();
+
+    Game* game = Game::GetInstance();
+    if (!game)return;
+
         Player* player = Game::GetInstance()->GetPlayer();
         if (!player || player->IsDead()) return;
 

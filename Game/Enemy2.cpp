@@ -14,6 +14,9 @@ Enemy2::Enemy2()
 {
     m_modelRender.Init("Assets/modelData/nokonoko1.tkm");
     m_shellModelRender.Init("Assets/modelData/nokonoko3.tkm"); // 甲羅モデルのパス
+    g_soundEngine->ResistWaveFileBank(3, "Assets/sound/AS_1473759_ゲーム_レトロなSE_（踏む）.wav");     // ポヨン
+    g_soundEngine->ResistWaveFileBank(7, "Assets/sound/AS_1387216_【環境音】地面に転がる空き缶.wav");     // キック
+
 }
 
 Enemy2::~Enemy2() {
@@ -81,6 +84,32 @@ void Enemy2::Update() {
         m_stepCooldown -= g_gameTime->GetFrameDeltaTime();
     }
 
+    if (m_state == EnemyState::ShellMoving) {
+        float moveDist = (m_position - m_lastPosition).Length();
+        if (moveDist < 1.0f) {
+            m_stuckTimer += deltaTime;
+        }
+        else {
+            m_stuckTimer = 0.0f;
+        }
+
+        if (m_stuckTimer > 0.001f && !IsZero(m_lastHitNormal)) {
+            // ★ 反射処理！
+            Vector3 normal = m_lastHitNormal;
+            normal.y = 0.0f;
+            normal.Normalize();
+
+            Vector3 reflectDir = m_velocity - normal * (2.0f * m_velocity.Dot(normal));
+            reflectDir.y = 0.0f;
+            reflectDir.Normalize();
+
+            m_velocity = reflectDir * m_shellSpeed;
+            m_stuckTimer = 0.0f;
+            m_lastHitNormal = Vector3::Zero;
+        }
+    }
+
+
     //甲羅復活時間
     if (m_state == EnemyState::ShellStill) {
         if (m_shellStillTimer > 0.0f) {
@@ -88,7 +117,6 @@ void Enemy2::Update() {
             if (m_shellStillTimer <= 0.0f) {
                 m_state = EnemyState::Walking;
                 m_velocity = m_initialDirection * m_walkSpeed; // ←ここを修正
-                ExitShellMode();
             }
         }
     }
@@ -155,8 +183,8 @@ void Enemy2::Update() {
     m_modelRender.Update();
     m_shellModelRender.Update();
     bool ghost = (m_state == EnemyState::ShellMoving);
-    SetPlayerGhost(ghost);
-    m_isGhostForPlayer = ghost;
+   // SetPlayerGhost(ghost);
+
 }
 
 
@@ -167,79 +195,65 @@ void Enemy2::OnStepped(const Vector3& playerForward) {
         // 歩いている亀を踏む → 甲羅停止
         m_state = EnemyState::ShellStill;
         m_velocity = Vector3::Zero;
-        ExitShellMode();
         m_shellStillTimer = 10.0f;
+       { SoundSource* se = NewGO<SoundSource>(0); se->Init(3);
+       se->SetVolume(3.0f);
+       se->Play(false); 
+        }
         break;
-   case EnemyState::ShellStill: {
-    // 停止中の甲羅を踏む → 蹴って転がる（跳ねない）
-    m_state = EnemyState::ShellMoving;
+    case EnemyState::ShellStill: {
+        m_state = EnemyState::ShellMoving;
 
-    SetPlayerGhost(true);
-    m_characterController.RemoveRigidBoby();
-    if (!m_shellGhostActive) {
-        m_shellGhost.CreateCapsule(m_position, Quaternion::Identity, m_radius, m_height);
-        m_shellGhostActive = true;
+        Vector3 playerPos = Game::GetInstance()->GetPlayer()->GetPosition();
+        Vector3 dir = m_position - playerPos;
+        dir.y = 0.0f;
+        if (dir.LengthSq() < 0.001f) {
+            dir = Vector3::AxisX;
+        }
+        dir.Normalize();
+
+        // ★ プレイヤーの前方に60ユニット出してから発射！
+        Vector3 shellStartPos = m_position + dir * 60.0f;
+        m_position = shellStartPos;
+        m_characterController.SetPosition(shellStartPos);
+        m_velocity = dir * m_shellSpeed;
+
+        m_invincibleTimer = 0.0f;
+        m_stepCooldown = 0.0f;
+
+        {
+            SoundSource* se = NewGO<SoundSource>(0);
+            se->Init(7);
+            se->SetVolume(3.0f);
+            se->Play(false);
+        }
+        break;
     }
-    Vector3 playerPos = Game::GetInstance()->GetPlayer()->GetPosition();
-    Vector3 forwardDir = Game::GetInstance()->GetPlayer()->GetForwardDir();
-    forwardDir.y = 0.0f;
-    forwardDir.Normalize();
-    Vector3 shellStartPos = playerPos + forwardDir * 60.0f;
-    m_position = shellStartPos;
-    m_characterController.SetPosition(shellStartPos);
-    if (m_shellGhostActive) {
-        m_shellGhost.SetPosition(shellStartPos);
-    }
-    m_velocity = forwardDir * m_shellSpeed;
-    m_invincibleTimer = 0.0f;
-    PhysicsGhostObject::CollisionFilter filter{ enCollisionGroup_Sensor,enCollisionGroup_Player };
-    m_shellGhost.SetCollisionFilter(filter);
-    m_stepCooldown = 0.0f;
-    break;
-}
 
     case EnemyState::ShellMoving:
         // 動いている甲羅を踏む → 停止 ＋ プレイヤーを跳ねさせる
         m_state = EnemyState::ShellStill;
         m_velocity = Vector3::Zero;
-        SetPlayerGhost(false);
+       // SetPlayerGhost(false);
         // ★ここを追加
-        if (m_rigidBody.GetBody() != nullptr) {
-            m_rigidBody.Release();
-        }
-        if (m_shellGhostActive) {
-            m_shellGhost.Release();
-            m_shellGhostActive = false;
+      
+
+        {
+            SoundSource* se = NewGO<SoundSource>(0);  
+            se->Init(3);
+            se->SetVolume(3.0f);
+            se->Play(false); 
         }
 
         // ★ここでプレイヤーを跳ねさせる
         Game::GetInstance()->GetPlayer()->ApplyStepJump();
         m_stepCooldown = 0.2f;
         m_shellStillTimer = 10.0f;
+
         break;
     default:
         break;
     }
-
-}
-
-void Enemy2::SetPlayerGhost(bool ghost) {
-    RigidBody* body = m_characterController.GetRigidBody();
-    int group = body->GetCollisionGroup();
-    int mask = body->GetCollisionMask();
-    if (ghost) {
-        mask &= ~enCollisionGroup_Player;
-        body->GetBody()->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
-
-    }
-    else
-    {
-        mask |= enCollisionGroup_Player;
-        body->GetBody()->setCollisionFlags(0);
-        body->GetBody()->setCollisionFlags(body->GetBody()->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
-    }
-    body->SetCollisionGroupAndMask(group, mask);
-    body->GetBody()->activate(true);
 
 }
 
@@ -266,53 +280,24 @@ void Enemy2::SetStartPosition(const Vector3& pos) {
 
 
 void Enemy2::OnCollision(const CollisionResult& result) {
+    if (m_state == EnemyState::ShellMoving && result.hitWall) {
+        m_lastHitNormal = result.hitNormal;
+    }
     //ぶつかるとき
     if (m_state == EnemyState::ShellStill && result.hitPlayer) {
         m_state = EnemyState::ShellMoving;
         if (m_characterController.GetRigidBody()->GetBody() != nullptr) {
             m_characterController.GetRigidBody()->Release();
         }
-        RigidBodyInitData rbInfo;
-        rbInfo.pos = m_position;
-        rbInfo.rot = Quaternion::Identity;
-        auto* capsule = new nsK2EngineLow::CCapsuleCollider();
-        capsule->Init(m_radius, m_height);
-        rbInfo.collider = capsule;
-        rbInfo.mass = 1.0f;
-        rbInfo.restitution = 0.0f;
-        rbInfo.collisionGroup = enCollisionGroup_Enemy2;
-        rbInfo.collisionMask = enCollisionGroup_Player | enCollisionAttr_Ground | enCollisionGroup_World;
-        m_rigidBody.Init(rbInfo);
+      
         Vector3 moveDir = result.playerForward;
         moveDir.y = 0.0f;
         moveDir.Normalize();
         m_velocity = moveDir * m_shellSpeed;
-        m_rigidBody.SetLinearVelocity(m_velocity);
         m_invincibleTimer = 0.2f;
-        SetPlayerGhost(true);
-        if (!m_shellGhostActive) {
-            m_shellGhost.CreateCapsule(m_position, Quaternion::Identity, m_radius, m_height);
-            m_shellGhostActive = true;
-        }
+       // SetPlayerGhost(true);
         PhysicsGhostObject::CollisionFilter filter{ enCollisionGroup_Sensor,enCollisionGroup_Player };
-        m_shellGhost.SetCollisionFilter(filter);
     }
-}
-void Enemy2::ExitShellMode() {
-    if (m_rigidBody.GetBody() != nullptr) {
-        m_rigidBody.Release();
-    }
-    if (m_shellGhostActive) {
-        m_shellGhost.Release();
-        m_shellGhostActive = false;
-    }
-    RigidBody* ccBody = m_characterController.GetRigidBody();
-    int group = ccBody->GetCollisionGroup();
-    int mask = ccBody->GetCollisionMask();
-    mask |= enCollisionGroup_Player;
-    ccBody->GetBody()->setCollisionFlags(ccBody->GetBody()->getCollisionFlags() & ~btCollisionObject::CF_NO_CONTACT_RESPONSE);
-    ccBody->SetCollisionGroupAndMask(group, mask);
-    ccBody->GetBody()->activate(true);
 }
 
 void Enemy2::OnDefeated() {

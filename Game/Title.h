@@ -7,5 +7,6 @@ public:
 	void Update();
 	void Render(RenderContext& rc);
 	SpriteRender m_spriteRender;
+	SoundSource* titleBGM; //タイトルのBGM。
 };
 

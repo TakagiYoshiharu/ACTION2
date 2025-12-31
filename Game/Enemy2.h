@@ -9,10 +9,9 @@ public:
 	bool Start();
 	void Move();
 	void OnStepped(const Vector3&playerForward);
-	void SetPlayerGhost(bool ghost);
+
 	void Render(RenderContext& rc);
 	void SetStartPosition(const Vector3& pos);
-	void ExitShellMode();
 	float GetInvincbleTimer()const { return m_invincibleTimer;};
 	void OnDefeated();
 	void SetStartDirection(const Vector3& dir);
@@ -32,7 +31,7 @@ public:
 		bool hitPlayer = false;
 		Enemy2* enemy = nullptr; // è’ìÀÇµÇΩìGÇï€éùÇµÇΩÇ¢èÍçá
 		Vector3 playerForward = Vector3::Zero;
-		Vector3 hitNormal;
+		Vector3 hitNormal=Vector3::Zero;
 	};
 	void OnCollision(const CollisionResult& result);
 	EnemyState GetState()const { return m_state; }
@@ -42,13 +41,9 @@ public:
 	bool IsDead()const;
 	EnemyState m_state = EnemyState::Walking;
 	bool m_isSteppedOn = false;
-	bool m_isGhostForPlayer = false;
-	PhysicsGhostObject m_shellGhost;
-	bool m_shellGhostActive = false;
 	CharacterController m_characterController;
 	ModelRender m_modelRender;
 	ModelRender m_shellModelRender;
-	RigidBody m_rigidBody;
 	float m_radius = 25.0f;
 	float m_height = 20.0f;
 	float m_turtleRadius = 30.0f;
@@ -72,5 +67,6 @@ public:
 	float m_shakeTimer = 0.0f;//êkÇ¶éûä‘
 	Vector3 m_initialDirection = Vector3::Right;
 	nsK2EngineLow::CCapsuleCollider* m_capsuleCollider = nullptr;
+	Vector3 m_lastHitNormal = Vector3::Zero;
 };
 

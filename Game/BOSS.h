@@ -10,6 +10,7 @@ public:
 	void Render(RenderContext& rc);
 	void SetStartPosition(const Vector3& pos);
 	void OnContact(IGameObject* other);
+	void OnDefeated();
 	ModelRender m_modelRender;
 	CharacterController m_characterController;
 	Vector3 m_initialDirection;
@@ -28,5 +29,7 @@ public:
 	// BOSS.h（メンバに追加）
 	Vector3 m_moveGravity = Vector3::Zero;
 	bool m_isVisible = false;
+	SoundSource* m_bgm = nullptr; // BGM用
+
 };
 
