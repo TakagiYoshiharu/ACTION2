@@ -39,9 +39,7 @@ Player::Player()
         }
       
     }
-
-    g_soundEngine->ResistWaveFileBank(4, "Assets/sound/AS_135672_ピヨヨヨン（マシーン、脱力）.wav"); // ←ファイル名は実際のものに合わせてね！
-
+    g_soundEngine->ResistWaveFileBank(4, "Assets/sound/AS_135672_ピヨヨヨン（マシーン、脱力）.wav");
 }
 
 Player::~Player()
@@ -54,7 +52,7 @@ void Player::Update()
     if (m_isDead) {
         if (auto* game = Game::GetInstance()) {
             game->ChangeScene("GameOver");
-     }
+        }
         DeleteGO(this);
         return;
     }
@@ -84,9 +82,9 @@ void Player::Update()
     if (m_position.y < -1000.0f) {
         m_isDead = true;
         m_prevPosition = m_position;
-        if (auto*game=Game::GetInstance()) {
+        if (auto* game = Game::GetInstance()) {
             game->ChangeScene("GameOver");
-       }
+        }
         DeleteGO(this);
         return;
     }
@@ -262,10 +260,13 @@ void Player::CheckStepOnEnemy()
                     forwardDir.y = 0.0f;
                     forwardDir.Normalize();
                     result.playerForward = forwardDir;
-                    enemy2->OnCollision(result); }
+                    enemy2->OnCollision(result);
+                }
                 else if (state == Enemy2::EnemyState::ShellMoving || state == Enemy2::EnemyState::Walking) {
-                    OnDamaged(); }
+                    OnDamaged();
+                }
             }
+
         }
     }
 }
@@ -334,7 +335,6 @@ void Player::OnDamaged() {
         se->Play(false);
     }
 
-
     if (m_hp <= 0) {
         m_isDead = true;
         m_deathTimer = 1.0f;
@@ -342,7 +342,6 @@ void Player::OnDamaged() {
         m_moveSpeed.y -= 100.0f;
     }
 }
-
 
 Vector3 Player::GetPosition() const {
     return m_position;

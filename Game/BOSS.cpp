@@ -5,7 +5,6 @@
 
 BOSS::BOSS() {
 	m_modelRender.Init("Assets/modelData/BOSS.tkm");
-    // ƒ{ƒXBGM‚ðÄ¶
     g_soundEngine->ResistWaveFileBank(15, "Assets/sound/BOSS_BGM.wav");
 }
 
@@ -107,6 +106,7 @@ void BOSS::Update() {
     if (dist < 250.0f) {
         Move(deltaTime, playerPos, newPos);
     }
+
     if (!m_isVisible && dist < appearRange) {
         m_isVisible = true;
 
@@ -140,7 +140,6 @@ void BOSS::OnDefeated() {
     }
     DeleteGO(this);
 }
-
 
 void BOSS::SetStartPosition(const Vector3& pos) {
 	m_initialDirection = pos;

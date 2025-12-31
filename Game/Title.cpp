@@ -18,6 +18,7 @@ Title::~Title() {
 	DeleteGO(this);
 }
 
+
 void Title::Update() {
 	if (g_pad[0]->IsTrigger(enButtonA)) {
 		// šBGM‚ğ~‚ß‚Äíœ
@@ -31,7 +32,6 @@ void Title::Update() {
 		DeleteGO(this);
 	}
 }
-
 
 void Title::Render(RenderContext& rc) {
 	m_spriteRender.Draw(rc);

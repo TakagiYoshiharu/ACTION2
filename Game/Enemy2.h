@@ -1,6 +1,6 @@
 #pragma once
 #include"Enemy.h"
-class Enemy2:public IGameObject
+class Enemy2 :public IGameObject
 {
 public:
 	Enemy2();
@@ -8,11 +8,10 @@ public:
 	void Update();
 	bool Start();
 	void Move();
-	void OnStepped(const Vector3&playerForward);
-
+	void OnStepped(const Vector3& playerForward);
 	void Render(RenderContext& rc);
 	void SetStartPosition(const Vector3& pos);
-	float GetInvincbleTimer()const { return m_invincibleTimer;};
+	float GetInvincbleTimer()const { return m_invincibleTimer; };
 	void OnDefeated();
 	void SetStartDirection(const Vector3& dir);
 	enum class EnemyState
@@ -31,12 +30,12 @@ public:
 		bool hitPlayer = false;
 		Enemy2* enemy = nullptr; // è’ìÀÇµÇΩìGÇï€éùÇµÇΩÇ¢èÍçá
 		Vector3 playerForward = Vector3::Zero;
-		Vector3 hitNormal=Vector3::Zero;
+		Vector3 hitNormal = Vector3::Zero;
 	};
 	void OnCollision(const CollisionResult& result);
 	EnemyState GetState()const { return m_state; }
-	Vector3 m_position=Vector3::Zero;
-	Vector3 m_velocity=Vector3::Zero;
+	Vector3 m_position = Vector3::Zero;
+	Vector3 m_velocity = Vector3::Zero;
 	Vector3 GetPosition()const;
 	bool IsDead()const;
 	EnemyState m_state = EnemyState::Walking;
@@ -48,7 +47,6 @@ public:
 	float m_height = 20.0f;
 	float m_turtleRadius = 30.0f;
 	float m_turtleHeight = 60.0f;
-
 	Vector3 m_initialPosition;
 	Vector3 m_moveGravity;
 	float m_moveTimer = 0.0f;  // åoâﬂéûä‘
@@ -69,4 +67,3 @@ public:
 	nsK2EngineLow::CCapsuleCollider* m_capsuleCollider = nullptr;
 	Vector3 m_lastHitNormal = Vector3::Zero;
 };
-

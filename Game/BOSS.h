@@ -30,6 +30,5 @@ public:
 	Vector3 m_moveGravity = Vector3::Zero;
 	bool m_isVisible = false;
 	SoundSource* m_bgm = nullptr; // BGM—p
-
 };
 

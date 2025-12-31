@@ -1,12 +1,14 @@
 #include "stdafx.h"
 #include "BackGround.h"
 #include"Game.h"
-
 BackGround::BackGround()
 {
     m_modelRender.Init("Assets/modelData/stage/stargOOO.tkm");
+
     m_physicsStaticObject.CreateFromModel(m_modelRender.GetModel(), m_modelRender.GetModel().GetWorldMatrix());
 
+    //当たり判定を可視化する。
+   //PhysicsWorld::GetInstance()->EnableDrawDebugWireFrame();
     g_soundEngine->ResistWaveFileBank(10, "Assets/sound/AS_983281_迫力・豪華・暗い＿ジャズビッグバンド_.wav");
     //PhysicsWorld::GetInstance()->EnableDrawDebugWireFrame();
 
@@ -24,7 +26,6 @@ BackGround::BackGround()
     stageBGM->Play(true); // ループ再生
     Game::GetInstance()->SetBGM(stageBGM);
 }
-
 
 BackGround::~BackGround()
 {

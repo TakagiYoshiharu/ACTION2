@@ -46,8 +46,6 @@ void Enemy::Move() {
 
 
 void Enemy::Update() {
-
-    
     if (m_isDead) {
         if (m_deathTimer > 0.0f) {
             m_deathTimer -= g_gameTime->GetFrameDeltaTime();
@@ -238,7 +236,6 @@ void Enemy::OnStepped() {
     if (m_isDead) return;
     m_isDead = true;
     m_deathTimer = 0.0f;
-
     SoundSource* se = NewGO<SoundSource>(0);
     se->Init(3);
 
