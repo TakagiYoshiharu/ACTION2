@@ -226,6 +226,7 @@
     <ClCompile Include="BackGround.cpp" />
     <ClCompile Include="BackGround2.cpp" />
     <ClCompile Include="BOSS.cpp" />
+    <ClCompile Include="BossShell.cpp" />
     <ClCompile Include="CollisonGroup.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="Enemy2.cpp" />
@@ -241,6 +242,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Preview|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="SweepResultWall.cpp" />
     <ClCompile Include="system\system.cpp" />
     <ClCompile Include="Title.cpp" />
   </ItemGroup>
@@ -248,6 +250,7 @@
     <ClInclude Include="BackGround.h" />
     <ClInclude Include="BackGround2.h" />
     <ClInclude Include="BOSS.h" />
+    <ClInclude Include="BossShell.h" />
     <ClInclude Include="CollisonGroup.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="Enemy2.h" />
@@ -258,6 +261,7 @@
     <ClInclude Include="Player.h" />
     <ClInclude Include="Star.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="SweepResultWall.h" />
     <ClInclude Include="system\system.h" />
     <ClInclude Include="Title.h" />
   </ItemGroup>

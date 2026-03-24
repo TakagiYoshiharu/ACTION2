@@ -18,6 +18,12 @@ namespace nsK2EngineLow {
 	class CharacterController {
 	public:
 	
+		bool IsHitWall()const { return m_hitWall; }
+		const Vector3& GetHitWallNormal()const { return m_hitWallNomal; }
+		bool IsWallReflected() const { return m_isWallReflected; }
+		const Vector3& GetWallReflectVelocity() const { return m_wallReflectVelocity; }
+		void ClearWallReflect() { m_isWallReflected = false; m_wallReflectVelocity = Vector3::Zero; }
+
 		CharacterController() {
 
 		}
@@ -95,5 +101,9 @@ namespace nsK2EngineLow {
 		float				m_radius = 0.0f;				//!<カプセルコライダーの半径。
 		float				m_height = 0.0f;				//!<カプセルコライダーの高さ。
 		RigidBody			m_rigidBody;					//剛体。
+		bool m_hitWall = false;
+		Vector3 m_hitWallNomal = Vector3::Zero;
+		Vector3 m_wallReflectVelocity = Vector3::Zero;
+		bool m_isWallReflected = false;
 	};
 }

@@ -62,5 +62,7 @@ public:
     int GetHP()const { return m_hp; }
     int starCount = 0;
     Game* m_game;
+    bool m_ignoreShellThisFrame = false;
+
 };
 

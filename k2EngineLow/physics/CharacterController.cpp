@@ -6,7 +6,11 @@
 #include "CharacterController.h"
 
 namespace nsK2EngineLow {
+	inline bool IsZero(const Vector3& v) {
+		return fabs(v.x) < 0.0001f && fabs(v.y) < 0.0001f && fabs(v.z) < 0.0001f;
+	}
 	namespace {
+
 		void Vector3CopyFrom(Vector3& vDst, btVector3& vSrc)
 		{
 			vDst.x = vSrc.x();
@@ -177,6 +181,32 @@ namespace nsK2EngineLow {
 				callback.startPos = posTmp;
 				//衝突検出。
 				PhysicsWorld::GetInstance()->ConvexSweepTest((const btConvexShape*)m_collider.GetBody(), start, end, callback);
+
+				//記録
+				if (callback.isHit) {
+					m_hitWallNomal = callback.hitNormal;
+					Vector3 moveDir;
+					moveDir.Subtract(nextPosition, m_position);
+					moveDir.y = 0.0f;
+					if (!IsZero(moveDir)) {
+						moveDir.Normalize();
+						Vector3 hitNormalXZ = callback.hitNormal;
+						hitNormalXZ.y = 0.0f; hitNormalXZ.Normalize();
+						Vector3 reflectDir = moveDir - hitNormalXZ * (2.0f * moveDir.Dot(hitNormalXZ)); 
+						reflectDir.y = 0.0f;
+						reflectDir.Normalize(); 
+						m_wallReflectVelocity = reflectDir;
+						m_isWallReflected = true;
+						Vector3 pushOut = hitNormalXZ;
+						pushOut.Scale(5.0f);
+						nextPosition.Add(pushOut);
+					}
+				}
+				else
+				{
+					m_isWallReflected = false;
+					m_hitWallNomal = Vector3::Zero;
+				}
 
 				if (callback.isHit) {
 					//当たった。

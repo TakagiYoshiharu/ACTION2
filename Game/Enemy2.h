@@ -11,7 +11,7 @@ public:
 	void OnStepped(const Vector3& playerForward);
 	void Render(RenderContext& rc);
 	void SetStartPosition(const Vector3& pos);
-	float GetInvincbleTimer()const { return m_invincibleTimer; };
+	float GetInvincibleTimer()const { return m_invincibleTimer; };
 	void OnDefeated();
 	void SetStartDirection(const Vector3& dir);
 	enum class EnemyState
@@ -53,7 +53,7 @@ public:
 	float m_shellRadius = 100.0f;
 	float m_shellHeight = 100.0f;
 	float m_walkSpeed = 50.0f;//noko移動速度
-	float m_shellSpeed = 500.0f;//甲羅の移動速度
+	float m_shellSpeed = 1000.0f;//甲羅の移動速度
 	float m_stuckTimer = 0.0f;//スタック時間
 	Vector3 m_lastPosition;
 	float m_invincibleTimer = 0.0f;//甲羅が動くときの無敵
@@ -66,4 +66,5 @@ public:
 	Vector3 m_initialDirection = Vector3::Right;
 	nsK2EngineLow::CCapsuleCollider* m_capsuleCollider = nullptr;
 	Vector3 m_lastHitNormal = Vector3::Zero;
+	bool m_hasReflected = false;
 };

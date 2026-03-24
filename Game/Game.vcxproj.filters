@@ -24,6 +24,8 @@
     <ClCompile Include="BOSS.cpp" />
     <ClCompile Include="Star.cpp" />
     <ClCompile Include="BackGround2.cpp" />
+    <ClCompile Include="SweepResultWall.cpp" />
+    <ClCompile Include="BossShell.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
@@ -43,5 +45,7 @@
     <ClInclude Include="BOSS.h" />
     <ClInclude Include="Star.h" />
     <ClInclude Include="BackGround2.h" />
+    <ClInclude Include="SweepResultWall.h" />
+    <ClInclude Include="BossShell.h" />
   </ItemGroup>
 </Project>

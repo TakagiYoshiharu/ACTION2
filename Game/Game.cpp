@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "Game.h"
 #include"Player.h"
 #include"GameCamera.h"
@@ -11,7 +11,13 @@
 #include"GameOver.h"
 #include"GameClear.h"
 #include"Title.h"
+#include"BossShell.h"
 static Game* s_gameInstance;
+
+// Game.cpp ã®ã©ã“ã‹ã«è¿½åŠ ï¼ˆä»–ã® Getã€œ ç³»é–¢æ•°ã®è¿‘ããŒè‡ªç„¶ï¼ï¼‰
+std::vector<BossShell*>& Game::GetBossShells(){
+	return m_bossShells;
+}
 
 Game::~Game() {
 	
@@ -19,7 +25,7 @@ Game::~Game() {
 
 bool Game::Start()
 {
-	////ƒ|ƒCƒ“ƒgƒ‰ƒCƒg‚ğì‚Á‚Ä‚İ‚é
+	////ãƒã‚¤ãƒ³ãƒˆãƒ©ã‚¤ãƒˆã‚’ä½œã£ã¦ã¿ã‚‹
 	//auto* PointLight = g_sceneLight->NewPointLight();
 	//PointLight->SetPosition(Vector3(5.0f, 100.0f, 0.0f));
 	//PointLight->SetColor(10000000000.0f, 0.1f, 0.1f);
@@ -32,19 +38,19 @@ bool Game::Start()
 	m_player = NewGO<Player>(0, "player");
 	m_gameCamera = NewGO<GameCamera>(0);
 	m_skyCube = NewGO<SkyCube>(0, "skycube");
-	m_timeLimit = 120.0f; // ƒXƒe[ƒWŠJn‚É§ŒÀŠÔ‚ğƒŠƒZƒbƒg
-	SetupStage1();
+	m_timeLimit = 120.0f; // ã‚¹ãƒ†ãƒ¼ã‚¸é–‹å§‹æ™‚ã«åˆ¶é™æ™‚é–“ã‚’ãƒªã‚»ãƒƒãƒˆ
+	SetupStage2();
 		
 	return true;
 }
 
 void Game::SetupStage1() {
 	m_backGround = NewGO<BackGround>(0);
-	m_timeLimit = 120.0f; // ƒXƒe[ƒW1—p‚Ì§ŒÀŠÔ
-	// c‘¼‚Ì“G‚à‚±‚±‚Å‚Ü‚Æ‚ß‚é
+	m_timeLimit = 120.0f; // ã‚¹ãƒ†ãƒ¼ã‚¸1ç”¨ã®åˆ¶é™æ™‚é–“
+	// â€¦ä»–ã®æ•µã‚‚ã“ã“ã§ã¾ã¨ã‚ã‚‹
 	Enemy2* noko1 = NewGO<Enemy2>(0, "enemy2");
 	noko1->SetStartPosition({ 6265.0f,1062.0f,-2177.0f });
-	noko1->SetStartDirection(Vector3::Front); // ©¶‚Ö
+	noko1->SetStartDirection(Vector3::Front); // â†å·¦ã¸
 	m_enemy2s.push_back(noko1);
 
 	Enemy2* noko2 = NewGO<Enemy2>(0, "enemy2");
@@ -53,8 +59,8 @@ void Game::SetupStage1() {
 	m_enemy2s.push_back(noko2);
 
 	Enemy2* noko3 = NewGO<Enemy2>(0, "enemy2");
-	noko3->SetStartPosition({ 6298.0f,1035.0f,-4571.0f });
-	noko3->SetStartDirection(Vector3::Front); // ©¶‚Ö
+	noko3->SetStartPosition({ 6328.0f,1035.0f,-4500.0f });
+	noko3->SetStartDirection(Vector3::Front); // â†å·¦ã¸
 	m_enemy2s.push_back(noko3);
 
 	Enemy2* enemy1 = NewGO<Enemy2>(0, "enemy2");
@@ -166,9 +172,9 @@ void Game::SetupStage1() {
 }
 
 void Game::SetupStage2() {
-	m_timeLimit = 120.0f; // ƒXƒe[ƒW2—p‚Ì§ŒÀŠÔi—áj
+	m_timeLimit = 180.0f; // ã‚¹ãƒ†ãƒ¼ã‚¸2ç”¨ã®åˆ¶é™æ™‚é–“ï¼ˆä¾‹ï¼‰
 	m_backGround2 = NewGO<BackGround2>(0);
-	// “GƒZƒbƒgB
+	// æ•µã‚»ãƒƒãƒˆB
 	Enemy* enemyA = NewGO<Enemy>(0, "enemy");
 	enemyA->SetStartPosition({ 1000.0f,200.0f,0.0f });
 	m_enemies.push_back(enemyA);
@@ -376,37 +382,63 @@ void Game::SetupStage2() {
 	Enemy* enemyAZ = NewGO<Enemy>(0, "enemy");
 	enemyAZ->SetStartPosition({ 19165.0f,140.0f,-180.0f });
 	m_enemies.push_back(enemyAZ);
-	// cƒXƒe[ƒW2—p‚Ì“G‚ğ‚±‚±‚Å‚Ü‚Æ‚ß‚é
+	// â€¦ã‚¹ãƒ†ãƒ¼ã‚¸2ç”¨ã®æ•µã‚’ã“ã“ã§ã¾ã¨ã‚ã‚‹
 	BOSS* boss1 = NewGO<BOSS>(0, "boss");
 	boss1->SetStartPosition({ 11343.0f,139.0f,-35.0f });
 	m_bosses.push_back(boss1);
 
-	//StarƒNƒ‰ƒX‚ÌƒIƒuƒWƒFƒNƒg‚ğì‚éB
+	//Starã‚¯ãƒ©ã‚¹ã®ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’ä½œã‚‹ã€‚
 	Star* star2 = NewGO<Star>(0, "star");
 	star2->position = { 23533.0f,600.0f,51.0f };
+
+	BossShell* shell = NewGO<BossShell>(0, "bossShell");
+	shell->SetStart({ 1200.0f,200.0f,0.0f }, Vector3::Right);
+	m_bossShells.push_back(shell);
 }
 
 
 void Game::Update() {
-	// š§ŒÀŠÔ‚ğŒ¸‚ç‚·
+	// â˜…åˆ¶é™æ™‚é–“ã‚’æ¸›ã‚‰ã™
 	if (!m_isCleared) {
 		m_timeLimit -= g_gameTime->GetFrameDeltaTime();
 		if (m_timeLimit <= 0.0f) {
-			ChangeScene("GameOver"); // ŠÔØ‚ê‚ÅƒQ[ƒ€ƒI[ƒo[
+			ChangeScene("gameOver"); // æ™‚é–“åˆ‡ã‚Œã§ã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼
 			return;
 		}
 	}
 	auto& enemies = GetEnemies();
 	enemies.erase(
 		std::remove_if(enemies.begin(), enemies.end(),
-			[](Enemy* e) { return e == nullptr || e->IsDead(); }),
+			[](Enemy* e) {
+				if (e == nullptr) return true;
+				// å®‰å…¨ã«ã‚¢ã‚¯ã‚»ã‚¹ã§ãã‚‹ã¨ç¢ºä¿¡ãŒã‚ã‚‹å ´åˆã®ã¿ IsDead ã‚’å‘¼ã¶
+				return e->IsDead();
+			}),
 		enemies.end()
 	);
 
-	// šƒXƒ^[‚ğŠÄ‹ ¨ ƒNƒŠƒA‰æ–Ê‚Ö
+	m_enemy2s.erase(
+		std::remove_if(m_enemy2s.begin(), m_enemy2s.end(),
+			[](Enemy2* e) { return e == nullptr; }),
+		m_enemy2s.end()
+	);
+
+	m_bosses.erase(
+		std::remove_if(m_bosses.begin(), m_bosses.end(),
+			[](BOSS* b) { return b == nullptr; }),
+		m_bosses.end()
+	);
+
+	m_bossShells.erase(std::remove_if(m_bossShells.begin(), m_bossShells.end(), [](BossShell* shell) {
+		return shell == nullptr || shell->IsDeleted();
+		}),
+		m_bossShells.end()
+	);
+
+	// â˜…ã‚¹ã‚¿ãƒ¼ã‚’ç›£è¦– â†’ ã‚¯ãƒªã‚¢ç”»é¢ã¸
 	if (m_player != nullptr && !m_player->IsDead() && m_player->starCount >= 1) {
-		m_isCleared = true;          // © ƒNƒŠƒAƒtƒ‰ƒO‚ğ—§‚Ä‚é
-		ChangeScene("GameClear");
+		m_isCleared = true;          // â† ã‚¯ãƒªã‚¢ãƒ•ãƒ©ã‚°ã‚’ç«‹ã¦ã‚‹
+		ChangeScene("gameClear");
 		return;
 	}
 
@@ -419,7 +451,7 @@ Game* Game::GetInstance() {
 }
 
 void Game::ChangeScene(const std::string& sceneName) {
-	// ƒvƒŒƒCƒ„[íœ‚Íˆê“x‚¾‚¯
+	// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼å‰Šé™¤ã¯ä¸€åº¦ã ã‘
 	if (m_player) {
 		DeleteGO(m_player);
 		m_player = nullptr;
@@ -430,35 +462,52 @@ void Game::ChangeScene(const std::string& sceneName) {
 	if (m_skyCube) { DeleteGO(m_skyCube);    m_skyCube = nullptr; }
 	if (m_star) { DeleteGO(m_star);       m_star = nullptr; }
 	if (m_backGround2) { DeleteGO(m_backGround2); m_backGround2 = nullptr; }
+	if (m_bossShell) { DeleteGO(m_bossShell); m_bossShell = nullptr; }
 
-	for (auto enemy : m_enemies) {
-		if (enemy) DeleteGO(enemy);
+	for (auto&enemy : m_enemies) {
+		if (enemy) { DeleteGO(enemy); 
+		enemy = nullptr;
+		}
 	}
 	m_enemies.clear();
 
-	for (auto enemy2 : m_enemy2s) {
-		if (enemy2) DeleteGO(enemy2);
+	for (auto&enemy2 : m_enemy2s) {
+		if (enemy2) { DeleteGO(enemy2); 
+		enemy2 = nullptr;
+		}
 	}
 	m_enemy2s.clear();
 
-	for (auto boss : m_bosses) {
-		if (boss) DeleteGO(boss);
+	for (auto&boss : m_bosses) {
+		if (boss) { DeleteGO(boss); 
+		boss = nullptr;
+		}
 	}
 	m_bosses.clear();
 
-	// š‚±‚±‚Å‚Í Game ©‘Ì‚ğíœ‚µ‚È‚¢
-	// DeleteGO(this); ©íœI
-
-	if (sceneName == "GameOver") {
-		m_gameover = NewGO<GameOver>(0);
+	for (auto& shell : m_bossShells) {
+		if (shell) {
+			DeleteGO(shell);
+			shell = nullptr;
+		}
 	}
-	else if (sceneName == "GameClear") {
-		NewGO<GameClear>(0, "gameClear"); // ‚±‚±‚ÅƒNƒŠƒA‰æ–Ê‚ğo‚·
+	m_bossShells.clear();
+
+	// â˜…ã“ã“ã§ã¯ Game è‡ªä½“ã‚’å‰Šé™¤ã—ãªã„
+	// DeleteGO(this); â†å‰Šé™¤ï¼
+
+	if (sceneName == "gameOver") {
+		if (!m_gameover) {
+			m_gameover = NewGO<GameOver>(0);
+		}
+	}
+	else if (sceneName == "gameClear") {
+		NewGO<GameClear>(0, "gameClear"); // ã“ã“ã§ã‚¯ãƒªã‚¢ç”»é¢ã‚’å‡ºã™
 	}
 }
 
 void Game::RestartStage() {
-	m_isCleared = false; // ÄƒXƒ^[ƒg‚ÉƒŠƒZƒbƒg
+	m_isCleared = false; // å†ã‚¹ã‚¿ãƒ¼ãƒˆæ™‚ã«ãƒªã‚»ãƒƒãƒˆ
 	if (m_stageIndex == 1) {
 		m_player = NewGO<Player>(0, "player");
 		m_gameCamera = NewGO<GameCamera>(0);
@@ -469,23 +518,25 @@ void Game::RestartStage() {
 		m_player = NewGO<Player>(0, "player");
 		m_gameCamera = NewGO<GameCamera>(0);
 		m_skyCube = NewGO<SkyCube>(0, "skycube");
+		m_bossShell = NewGO<BossShell>(0, "bossShell");
 		SetupStage2();
 	}
 }
 
 
 void Game::NextStage() {
-	m_isCleared = false; // ÄƒXƒ^[ƒg‚ÉƒŠƒZƒbƒg
+	m_isCleared = false; // å†ã‚¹ã‚¿ãƒ¼ãƒˆæ™‚ã«ãƒªã‚»ãƒƒãƒˆ
 	m_stageIndex++;
 	if (m_stageIndex == 2) {
-		// ƒXƒe[ƒW2ŠJn
+		// ã‚¹ãƒ†ãƒ¼ã‚¸2é–‹å§‹
 		m_player = NewGO<Player>(0, "player");
 		m_gameCamera = NewGO<GameCamera>(0);
 		m_skyCube = NewGO<SkyCube>(0, "skycube");
+		m_bossShell = NewGO<BossShell>(0, "bossShell");
 		SetupStage2();
 	}
 	else if (m_stageIndex == 3) {
-		// ƒXƒe[ƒW2ƒNƒŠƒAŒã ¨ ƒ^ƒCƒgƒ‹‚Ö
+		// ã‚¹ãƒ†ãƒ¼ã‚¸2ã‚¯ãƒªã‚¢å¾Œ â†’ ã‚¿ã‚¤ãƒˆãƒ«ã¸
 		NewGO<Title>(0, "title");
 	}
 }
@@ -493,11 +544,12 @@ void Game::NextStage() {
 
 void Game::Render(RenderContext& rc)
 {
-	// ƒtƒHƒ“ƒgXV
+
+	 //ãƒ•ã‚©ãƒ³ãƒˆæ›´æ–°
 	wchar_t buf[64];
 	swprintf(buf, 64, L"TIME: %.0f", m_timeLimit);
 	m_timeFont.SetText(buf);
-	m_timeFont.SetPosition({ -800.0f, 400.0f, 0.0f }); // ‰æ–Ê‰Eã
+	m_timeFont.SetPosition({ -800.0f, 400.0f, 0.0f }); // ç”»é¢å³ä¸Š
 	m_timeFont.SetColor({ 0.0f, 0.0f, 0.0f, 1.0f });
-	m_timeFont.Draw(rc); // §ŒÀŠÔ‚ğ•`‰æ
+	m_timeFont.Draw(rc); // åˆ¶é™æ™‚é–“ã‚’æç”»
 }

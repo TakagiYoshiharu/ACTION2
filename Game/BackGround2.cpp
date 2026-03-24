@@ -9,7 +9,7 @@ BackGround2::BackGround2()
     m_physicsStaticObject.CreateFromModel(m_modelRender.GetModel(), m_modelRender.GetModel().GetWorldMatrix());
     g_soundEngine->ResistWaveFileBank(14, "Assets/sound/AS_1665072_任天堂風ボス戦曲_ストリングスとオルガン.wav");
     //当たり判定を可視化する。
-   //PhysicsWorld::GetInstance()->EnableDrawDebugWireFrame();
+  // PhysicsWorld::GetInstance()->EnableDrawDebugWireFrame();
     if (Game::GetInstance() && Game::GetInstance()->GetBGM() != nullptr) {
         Game::GetInstance()->GetBGM()->Stop();
         DeleteGO(Game::GetInstance()->GetBGM());

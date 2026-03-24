@@ -4,6 +4,7 @@
 #include"Enemy2.h"
 #include"Game.h"
 #include"GameOver.h"
+#include"BossShell.h"
 #include"CollisonGroup.h"
 #include"sound/SoundEngine.h"
 #include"sound/soundSource.h"
@@ -37,7 +38,7 @@ Player::Player()
         if (i < m_hp) {
             m_spriteRender[i].Init("Assets/sprite/full.DDS", 100.0f, 100.0f);
         }
-      
+
     }
     g_soundEngine->ResistWaveFileBank(4, "Assets/sound/AS_135672_ピヨヨヨン（マシーン、脱力）.wav");
 }
@@ -51,7 +52,7 @@ void Player::Update()
 {
     if (m_isDead) {
         if (auto* game = Game::GetInstance()) {
-            game->ChangeScene("GameOver");
+            game->ChangeScene("gameOver");
         }
         DeleteGO(this);
         return;
@@ -83,20 +84,28 @@ void Player::Update()
         m_isDead = true;
         m_prevPosition = m_position;
         if (auto* game = Game::GetInstance()) {
-            game->ChangeScene("GameOver");
+            game->ChangeScene("gameOver");
         }
         DeleteGO(this);
         return;
     }
     m_prevPosition = m_position;
+    m_ignoreShellThisFrame = false;
 }
 
 void Player::Move()
 {
+    const float friction = 0.85f;
+    m_moveSpeed.x *=friction ;
+    m_moveSpeed.z *=friction ;
+
+    if (fabsf(m_moveSpeed.x) < 1.0f)m_moveSpeed.x = 0.0f;
+    if (fabsf(m_moveSpeed.z) < 1.0f)m_moveSpeed.z = 0.0f;
+
     //xzの移動速度を0.0fにする。
 
-    m_moveSpeed.x = 0.0f;
-    m_moveSpeed.z = 0.0f;
+    //m_moveSpeed.x = 0.0f;
+    //m_moveSpeed.z = 0.0f;
 
     //左スティックの入力量を取得。
     Vector3 stickl;
@@ -116,15 +125,56 @@ void Player::Move()
     m_isDashing = g_pad[0]->IsPress(enButtonB);
 
     // 移動速度を決定
-    float movePower = m_isDashing ? 400.0f : 120.0f;
+    float movePower = m_isDashing ? 80.0f :70.0f;
     Vector3 moveDir = right * stickl.x + forward * stickl.y;
+    if (moveDir.LengthSq() > 0.01f && m_moveSpeed.LengthSq() > 1.0f) {
+        Vector3 moveDirNorm = moveDir;
+        moveDirNorm.Normalize();
+        Vector3 velocityXZ = m_moveSpeed;
+        velocityXZ.y = 0.0f;
+        Vector3 velocityNorm = velocityXZ;
+        velocityNorm.Normalize();
+        float dot = moveDirNorm.Dot(velocityNorm);
+        bool isBraking = (!m_isDashing && dot < 0.0f);
+        float inputScale = isBraking ? 0.3f : 1.0f;
+        if (isBraking) {
 
-    //移動速度にスティックの入力量を加算する。
-    m_moveSpeed.x = moveDir.x * movePower;
-    m_moveSpeed.z = moveDir.z * movePower;
+            // 入力方向の正規化
+            Vector3 moveDirNorm2 = moveDir;
+            moveDirNorm2.Normalize();
 
+            // 現在の速度（XZ）
+            Vector3 velocityXZ = m_moveSpeed;
+            velocityXZ.y = 0.0f;
 
+            // 速度を「前後成分」と「横成分」に分解
+            float forwardSpeed = velocityXZ.Dot(moveDirNorm2);
+            Vector3 forwardVec = moveDirNorm2 * forwardSpeed;
+            Vector3 sideVec = velocityXZ - forwardVec;
 
+            // ★逆方向（forwardSpeed < 0）だけブレーキ
+            if (forwardSpeed < 0.0f) {
+                forwardSpeed *= 0.6f;
+            }
+
+            // ★横滑りは残す
+            Vector3 newVel = moveDirNorm2 * forwardSpeed + sideVec;
+
+            m_moveSpeed.x = newVel.x;
+            m_moveSpeed.z = newVel.z;
+            m_moveSpeed.x += moveDirNorm2.x * 100.0f;
+            m_moveSpeed.z += moveDirNorm2.z * 100.0f;
+        }
+
+        m_moveSpeed.x += moveDir.x * movePower * inputScale;
+        m_moveSpeed.z += moveDir.z * movePower * inputScale;
+    }
+    else
+    {
+        m_moveSpeed.x += moveDir.x * movePower;
+        m_moveSpeed.z += moveDir.z * movePower;
+    }
+    
     //地面に付いていたら。
     if (m_characterController.IsOnGround())
     {
@@ -135,7 +185,7 @@ void Player::Move()
         if (g_pad[0]->IsTrigger(enButtonA))
         {
             //ジャンプさせる。
-            m_moveSpeed.y = 430.0f;
+            m_moveSpeed.y = 450.0f;
         }
     }
 
@@ -223,21 +273,24 @@ void Player::CheckStepOnEnemy()
     for (Enemy2* enemy2 : Game::GetInstance()->GetEnemy2s()) {
         if (!enemy2 || enemy2->IsDead()) continue;
 
+        if (enemy2->GetState() == Enemy2::EnemyState::ShellMoving && enemy2->GetInvincibleTimer() > 0.0f) {
+            continue;
+        }
         Vector3 enemyPos = enemy2->GetPosition(); // Enemy2にGetPosition()を追加
         //踏む判定
         if (IsStepHit(playerPos, enemyPos)) {
-            if (enemy2->GetState()==Enemy2::EnemyState::Walking) {
+            if (enemy2->GetState() == Enemy2::EnemyState::Walking) {
                 enemy2->OnStepped(Vector3::Zero);
                 ApplyStepJump();
             }
-            else if(enemy2->GetState()==Enemy2::EnemyState::ShellStill)
+            else if (enemy2->GetState() == Enemy2::EnemyState::ShellStill)
             {
                 Vector3 forwardDir = GetForwardFromQuaternion(m_rotation);
                 forwardDir.y = 0.0f;
                 forwardDir.Normalize();
                 enemy2->OnStepped(forwardDir);
             }
-            else if(enemy2->GetState()==Enemy2::EnemyState::ShellMoving)
+            else if (enemy2->GetState() == Enemy2::EnemyState::ShellMoving)
             {
                 enemy2->OnStepped(Vector3::Zero);
                 ApplyStepJump();
@@ -254,6 +307,7 @@ void Player::CheckStepOnEnemy()
             if (horizontalDist < 52.0f && dy < 10.0f) {
                 auto state = enemy2->GetState();
                 if (state == Enemy2::EnemyState::ShellStill) {
+                    // 甲羅を蹴る
                     Enemy2::CollisionResult result;
                     result.hitPlayer = true;
                     Vector3 forwardDir = GetForwardFromQuaternion(m_rotation);
@@ -261,13 +315,48 @@ void Player::CheckStepOnEnemy()
                     forwardDir.Normalize();
                     result.playerForward = forwardDir;
                     enemy2->OnCollision(result);
+                    m_ignoreShellThisFrame = true;
+                    // ★ このフレームは絶対にダメージ判定をしない
+                    continue;
                 }
                 else if (state == Enemy2::EnemyState::ShellMoving || state == Enemy2::EnemyState::Walking) {
-                    OnDamaged();
+                    if (!m_ignoreShellThisFrame) {
+                        OnDamaged();
+                    }
                 }
+
             }
 
         }
+    }
+    for (BossShell* shell : Game::GetInstance()->GetBossShells()) {
+        if (!shell)continue;
+        Vector3 shellPos = shell->GetPosition();
+        float dx = playerPos.x - shellPos.x;
+        float dz = playerPos.z - shellPos.z;
+        float dy = fabs(playerPos.y - shellPos.y);
+        float horizontalDist = sqrtf(dx * dx + dz * dz);
+        if (horizontalDist < 80.0f && dy < 30.0f) {
+            if (m_prevPosition.y > shellPos.y && m_position.y <= shellPos.y + 60.0f && m_moveSpeed.y < 0.0f) {
+                shell->Stop();
+                ApplyStepJump();
+            }
+            else if (!m_ignoreShellThisFrame && !m_isInvincible) {
+                OnDamaged();
+            }
+        }
+        else if (shell->m_isStopped)
+        {
+            if (horizontalDist < 52.0f && dy < 10.0f) {
+                    Vector3 forwardDir = GetForwardFromQuaternion(m_rotation);
+                    forwardDir.y = 0.0f;
+                    forwardDir.Normalize();
+                    shell->Kick(forwardDir);
+                    m_ignoreShellThisFrame = true;
+                    return;
+            }
+        }
+      
     }
 }
 bool Player::IsStepHit(const Vector3& playerPos, const Vector3& enemyPos) {
@@ -294,7 +383,7 @@ void Player::ApplyStepJump() {
         m_moveSpeed.y = 600.0f; // 高めジャンプ
     }
     else {
-        m_moveSpeed.y = 300.0f; // 通常ジャンプ
+        m_moveSpeed.y = 400.0f; // 通常ジャンプ
     }
 }
 
@@ -388,11 +477,11 @@ void Player::Render(RenderContext& rc)
            
         m_spriteRender[i].Draw(rc);
     }
-    // 座標表示
+   //  座標表示
    /* wchar_t posText[64];
     swprintf(posText, 64, L"Pos: X=%.1f Y=%.1f Z=%.1f", m_position.x, m_position.y, m_position.z);
     m_fontrender.SetText(posText);
-    m_fontrender.SetPosition({ -800.0f, 400.0f, 0.0f });
+    m_fontrender.SetPosition({ 300.0f, 400.0f, 0.0f });
     m_fontrender.SetColor({ 0.0f, 0.0f, 0.0f, 1.0f });
     m_fontrender.Draw(rc);*/
 }

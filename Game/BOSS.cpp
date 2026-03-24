@@ -2,6 +2,7 @@
 #include "BOSS.h"
 #include"Player.h"
 #include"Game.h"
+#include"BossShell.h"
 
 BOSS::BOSS() {
 	m_modelRender.Init("Assets/modelData/BOSS.tkm");
@@ -20,7 +21,7 @@ bool BOSS::Start() {
 
 void BOSS::Move(float deltaTime,const Vector3&playerPos,const Vector3&bossPos) {
 	float chaseSpeed = 30.0f;//圧をかけるスピード
-	float stopDistance = 0.0f;//距離制限
+	float stopDistance = 100.0f;//距離制限
 	Vector3 velocity = { 0.0f,0.0f,0.0f };
 	if (fabs(playerPos.z - bossPos.z) > stopDistance) {
 		if (playerPos.z < bossPos.z) {
@@ -103,7 +104,7 @@ void BOSS::Update() {
     }
 
     // 近距離なら移動
-    if (dist < 250.0f) {
+    if (dist < 1500.0f) {
         Move(deltaTime, playerPos, newPos);
     }
 
@@ -129,6 +130,21 @@ void BOSS::Update() {
             DeleteGO(m_bgm);
             m_bgm = nullptr;
         }
+    }
+    // クールダウン更新
+    m_shellCooldown -= deltaTime;
+    if (m_shellCooldown <= 0.0f && m_hasDetectedPlayer) {
+            Vector3 dir = playerPos - bossPos;
+            dir.y = 0.0f;
+            if (dir.LengthSq() < 0.01f) dir = Vector3::AxisX;
+            dir.Normalize();
+            Vector3 spawnPos = bossPos + dir * 100.0f;
+            m_bossShell = NewGO<BossShell>(0, "bossShell");
+            if (m_bossShell) {
+                m_bossShell->SetStart(spawnPos, dir);
+                Game::GetInstance()->GetBossShells().push_back(m_bossShell);
+            }
+        m_shellCooldown = m_shellInterval;
     }
 }
 

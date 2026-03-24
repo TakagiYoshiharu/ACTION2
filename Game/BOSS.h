@@ -1,4 +1,5 @@
 #pragma once
+class BossShell;
 class BOSS:public IGameObject
 {
 public:
@@ -30,5 +31,8 @@ public:
 	Vector3 m_moveGravity = Vector3::Zero;
 	bool m_isVisible = false;
 	SoundSource* m_bgm = nullptr; // BGM—p
+	float m_shellCooldown = 0.0f;
+	const float m_shellInterval = 1.5f;
+	BossShell* m_bossShell;
 };
 

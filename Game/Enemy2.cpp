@@ -4,6 +4,7 @@
 #include"Player.h"
 #include"Enemy.h"
 #include"CollisonGroup.h"
+#include"SweepResultWall.h"
 
 CharacterController* Enemy2::GetCharacterController() {
     return &m_characterController;
@@ -83,29 +84,46 @@ void Enemy2::Update() {
         m_stepCooldown -= g_gameTime->GetFrameDeltaTime();
     }
 
-    if (m_state == EnemyState::ShellMoving) {
-        float moveDist = (m_position - m_lastPosition).Length();
-        if (moveDist < 1.0f) {
-            m_stuckTimer += deltaTime;
-        }
-        else {
-            m_stuckTimer = 0.0f;
-        }
-
-        if (m_stuckTimer > 0.001f && !IsZero(m_lastHitNormal)) {
-            // ★ 反射処理！
-            Vector3 normal = m_lastHitNormal;
-            normal.y = 0.0f;
+    if (m_state == EnemyState::Walking && m_characterController.IsWallReflected()) {
+        Vector3 normal = m_characterController.GetHitWallNormal();
+        normal.y = 0.0f;
+        if (!IsZero(normal)) {
             normal.Normalize();
+            if (fabs(normal.x) > fabs(normal.z)) {
+                m_velocity.x *= -1.0f;
+                m_initialDirection.x *= -1.0f;
+            }
+            else
+            {
+                m_velocity.z *= -1.0f;
+                m_initialDirection.z *= -1.0f;
+            }
+            m_characterController.ClearWallReflect();
+        }
+    }
 
-            Vector3 reflectDir = m_velocity - normal * (2.0f * m_velocity.Dot(normal));
+    if (m_state == EnemyState::ShellMoving && m_characterController.IsWallReflected()){
+        Vector3 normal = m_characterController.GetHitWallNormal();
+        normal.y = 0.0f;
+        if (!IsZero(normal)) {
+            normal.Normalize();
+            Vector3 reflectDir = m_velocity;
+            if (fabs(normal.x) > fabs(normal.z)) {
+                reflectDir.x *= -1.0f;
+            }
+            else
+            {
+                reflectDir.z *= -1.0f;
+            }
             reflectDir.y = 0.0f;
             reflectDir.Normalize();
 
             m_velocity = reflectDir * m_shellSpeed;
-            m_stuckTimer = 0.0f;
-            m_lastHitNormal = Vector3::Zero;
-        }
+            Vector3 PushOut = normal * 5.0f;
+            m_position += PushOut;
+            m_characterController.SetPosition(m_position);
+        } 
+        m_characterController.ClearWallReflect();
     }
 
     //甲羅復活時間
@@ -202,28 +220,60 @@ void Enemy2::OnStepped(const Vector3& playerForward) {
         m_state = EnemyState::ShellMoving;
 
         Vector3 playerPos = Game::GetInstance()->GetPlayer()->GetPosition();
-        Vector3 dir = m_position - playerPos;
-        dir.y = 0.0f;
-        if (dir.LengthSq() < 0.001f) {
-            dir = Vector3::AxisX;
+        Vector3 diff = m_position - playerPos;
+        diff.y = 0.0f;
+        Vector3 dir;
+        if (fabs(diff.x) > fabs(diff.z)) {
+            dir = (diff.x >= 0.0f) ? Vector3(1, 0, 0) : Vector3(-1, 0, 0);
         }
-        dir.Normalize();
+        else
+        {
+            dir = (diff.z >= 0.0f) ? Vector3(0, 0, 1) : Vector3(0, 0, -1);
+        }
 
-        // ★ プレイヤーの前方に60ユニット出してから発射！
-        Vector3 shellStartPos = m_position + dir * 60.0f;
+
+        float maxPush = 60.0f;
+        float safePush = 5.0f;
+        float buffer = 30.0f;
+
+        Vector3 rayStart = m_position;
+        Vector3 rayEnd = rayStart + dir * maxPush;
+
+        btTransform from, to; from.setIdentity(); 
+        to.setIdentity();
+        from.setOrigin(btVector3(rayStart.x, rayStart.y + m_height * 0.5f, rayStart.z));
+        to.setOrigin(btVector3(rayEnd.x, rayEnd.y + m_height * 0.5f, rayEnd.z));
+
+        SweepResultWall wallCheck;
+        wallCheck.me = m_characterController.GetRigidBody()->GetBody();
+        wallCheck.startPos = rayStart; 
+        PhysicsWorld::GetInstance()->ConvexSweepTest((const btConvexShape*)m_characterController.GetCollider()->GetBody(), from, to, wallCheck); 
+        float pushDistance = maxPush;
+        if (wallCheck.isHit) {
+            float hitDist = (wallCheck.hitPosition - m_position).Length();
+            float candidatePush = hitDist - buffer;
+            if (candidatePush < 1.0f) {
+                pushDistance = 0.0f;
+            }
+            else
+            {
+                pushDistance = (candidatePush > safePush) ? candidatePush : safePush;
+            }
+        }
+        Vector3 shellStartPos = m_position + dir * pushDistance;
         m_position = shellStartPos;
         m_characterController.SetPosition(shellStartPos);
-        m_velocity = dir * m_shellSpeed;
-
-        m_invincibleTimer = 0.0f;
+        m_velocity = dir * m_shellSpeed; 
+        m_invincibleTimer = 0.095f;
         m_stepCooldown = 0.0f;
-
-        {
-            SoundSource* se = NewGO<SoundSource>(0);
-            se->Init(7);
-            se->SetVolume(3.0f);
-            se->Play(false);
+        if (auto* player = Game::GetInstance()->GetPlayer()) {
+            player->m_ignoreShellThisFrame = true;
         }
+        SoundSource* se = NewGO<SoundSource>(0);
+        se->Init(7);
+        se->SetVolume(3.0f);
+        se->Play(false);
+
         break;
     }
 
@@ -234,7 +284,7 @@ void Enemy2::OnStepped(const Vector3& playerForward) {
         // ★ここを追加
         {
             SoundSource* se = NewGO<SoundSource>(0);
-            se->Init(3);
+            se->Init(7);
             se->SetVolume(3.0f);
             se->Play(false);
         }
@@ -279,15 +329,22 @@ void Enemy2::OnCollision(const CollisionResult& result) {
     //ぶつかるとき
     if (m_state == EnemyState::ShellStill && result.hitPlayer) {
         m_state = EnemyState::ShellMoving;
-        if (m_characterController.GetRigidBody()->GetBody() != nullptr) {
-            m_characterController.GetRigidBody()->Release();
+        if (auto* player = Game::GetInstance()->GetPlayer()) {
+            player->m_ignoreShellThisFrame = true; 
         }
         Vector3 moveDir = result.playerForward;
         moveDir.y = 0.0f;
+        if (moveDir.LengthSq() < 0.001f) {
+            moveDir = Vector3::AxisX;
+        }
         moveDir.Normalize();
         m_velocity = moveDir * m_shellSpeed;
         m_invincibleTimer = 0.2f;
-        PhysicsGhostObject::CollisionFilter filter{ enCollisionGroup_Sensor,enCollisionGroup_Player };
+
+         SoundSource* se = NewGO<SoundSource>(0);
+         se->Init(7);
+         se->SetVolume(3.0f);
+         se->Play(false);
     }
 }
 
@@ -315,6 +372,7 @@ void Enemy2::SetStartDirection(const Vector3& dir) {
 void Enemy2::Render(RenderContext& rc) {
     if (m_isDead)return;
     if (m_state == EnemyState::Defeated)return;
+
     if (m_state == EnemyState::Walking) {
         m_modelRender.Draw(rc);
     }

@@ -11,6 +11,7 @@ class BOSS;
 class GameOver;
 class GameClear;
 class Star;
+class BossShell;
 class Game : public IGameObject
 {
 public:
@@ -38,6 +39,7 @@ public:
     GameClear* m_gameclear;
     BOSS* m_boss;
     Star* m_star;
+    BossShell* m_bossShell;
     Player* GetPlayer() const { return m_player; } // プレイヤー取得
     void ChangeScene(const std::string& sceneName);
     std::vector<Enemy*> m_enemies;
@@ -58,4 +60,8 @@ public:
     SoundSource* m_bgm = nullptr; // 現在再生中のBGM
     SoundSource* GetBGM() const { return m_bgm; }
     void SetBGM(SoundSource* bgm) { m_bgm = bgm; }
+    // Game.h の public: の中に追加！
+    std::vector<BossShell*>& GetBossShells();
+    // Game.h の private: に追加（他の敵リストと並べると自然！）
+    std::vector<BossShell*> m_bossShells;
 };
